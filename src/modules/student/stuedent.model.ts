@@ -44,6 +44,17 @@ const localGuardianSchema = new Schema<TLocalGuardian>({
 
 const studentSchema = new Schema<TStudent, StudentModel, StudentMethods>({
   id: { type: String, unique: true, required: true },
+  user: {
+    type: Schema.Types.ObjectId,
+    required: [true, 'User id is required.'],
+    unique: true,
+    ref: 'User',
+  },
+  password: {
+    type: String,
+    required: [true, 'Password is rquired'],
+    maxlength: [20, 'Password can not be more thatn 20 charachters.'],
+  },
   name: {
     required: true,
     type: userNameSchema,
@@ -70,8 +81,10 @@ const studentSchema = new Schema<TStudent, StudentModel, StudentMethods>({
   emergencyContactNo: { type: String, required: true },
   bloodGroup: {
     type: String,
-    required: true,
-    enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
+    enum: {
+      values: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
+      message: '{VALUE} is not a valid blood group',
+    },
   },
   presentAddress: { type: String, required: true },
   permanentAddress: { type: String, required: true },
