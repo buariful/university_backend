@@ -50,11 +50,11 @@ const studentSchema = new Schema<TStudent, StudentModel, StudentMethods>({
     unique: true,
     ref: 'User',
   },
-  password: {
-    type: String,
-    required: [true, 'Password is rquired'],
-    maxlength: [20, 'Password can not be more thatn 20 charachters.'],
-  },
+  // password: {
+  //   type: String,
+  //   required: [true, 'Password is rquired'],
+  //   maxlength: [20, 'Password can not be more thatn 20 charachters.'],
+  // },
   name: {
     required: true,
     type: userNameSchema,
@@ -98,6 +98,25 @@ const studentSchema = new Schema<TStudent, StudentModel, StudentMethods>({
   },
 
   profileImg: { type: String },
+});
+
+studentSchema.virtual('fullName').get(function () {
+  return this.name.firstName + this.name.lastName;
+});
+
+// query middlewares
+studentSchema.pre('find', function (next) {
+  this.find({ isDeleted: { $ne: true } });
+  next();
+});
+studentSchema.pre('findOne', function (next) {
+  this.find({ isDeleted: { $ne: true } });
+  next();
+});
+
+studentSchema.pre('aggregate', function (next) {
+  this.pipeline().unshift({ $match: { isDeleted: { $ne: true } } });
+  next();
 });
 
 studentSchema.methods.isUserExist = async function (id: string) {
