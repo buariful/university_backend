@@ -96,11 +96,7 @@ const studentSchema = new Schema<TStudent, StudentModel, StudentMethods>({
     required: true,
     type: localGuardianSchema,
   },
-  isActive: {
-    type: String,
-    default: 'active',
-    enum: ['active', 'blocked'],
-  },
+
   profileImg: { type: String },
 });
 
