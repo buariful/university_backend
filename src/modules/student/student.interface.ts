@@ -38,7 +38,7 @@ export type TStudent = {
   guardian: TGuardian;
   localGuardian: TLocalGuardian;
   profileImg?: string;
-  isActive: 'active' | 'blocked';
+  // isActive: 'active' | 'blocked';
 };
 
 export type StudentMethods = {

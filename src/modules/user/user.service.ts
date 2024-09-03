@@ -27,8 +27,9 @@ const createStuentIntoDB = async (password: string, studentData: TStudent) => {
 
     const newStudent = await Student.create(studentData);
     return newStudent;
+  } else {
+    throw new Error('Failed to create student.');
   }
-  return 'abc';
 };
 
 export const UserServices = {
