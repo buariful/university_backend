@@ -68,7 +68,7 @@ const studentSchema = new Schema<TStudent, StudentModel, StudentMethods>({
         "{VALUE} isn't supported. The gender should be either male or female",
     },
   },
-  dateOfBirth: String,
+  dateOfBirth: { type: Date },
   email: {
     type: String,
     required: true,
