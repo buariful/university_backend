@@ -10,7 +10,7 @@ type hudai = [string, ...string[]];
 export const createAcademicSemesterValidationSchema = z.object({
   body: z.object({
     name: z.enum([...AcademicSemesterName] as hudai),
-    year: z.date(),
+    year: z.string(),
     code: z.enum([...AcademicSemesterCode] as [string, ...string[]]),
     startMonth: z.enum([...Months] as [string, ...string[]]),
     endMonth: z.enum([...Months] as [string, ...string[]]),
