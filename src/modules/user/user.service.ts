@@ -10,11 +10,11 @@ const createStuentIntoDB = async (password: string, studentData: TStudent) => {
   // if password is not given, use default password.
   userData.password = password || (config.default_password as string);
 
-  //  set manually generated id
-  userData.id = '2030100002';
-
   //set student role
   userData.role = 'student';
+
+  //  set manually generated id
+  userData.id = '2030100002';
 
   //  create an user
   const newUser = await User.create(userData);

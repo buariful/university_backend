@@ -42,63 +42,77 @@ const localGuardianSchema = new Schema<TLocalGuardian>({
   address: { type: String, required: true },
 });
 
-const studentSchema = new Schema<TStudent, StudentModel, StudentMethods>({
-  id: { type: String, unique: true, required: true },
-  user: {
-    type: Schema.Types.ObjectId,
-    required: [true, 'User id is required.'],
-    unique: true,
-    ref: 'User',
-  },
-  // password: {
-  //   type: String,
-  //   required: [true, 'Password is rquired'],
-  //   maxlength: [20, 'Password can not be more thatn 20 charachters.'],
-  // },
-  name: {
-    required: true,
-    type: userNameSchema,
-  },
-  gender: {
-    type: String,
-    required: true,
-    enum: {
-      values: ['male', 'female'],
-      message:
-        "{VALUE} isn't supported. The gender should be either male or female",
+const studentSchema = new Schema<TStudent, StudentModel, StudentMethods>(
+  {
+    id: { type: String, unique: true, required: true },
+    user: {
+      type: Schema.Types.ObjectId,
+      required: [true, 'User id is required.'],
+      unique: true,
+      ref: 'User',
+    },
+    // password: {
+    //   type: String,
+    //   required: [true, 'Password is rquired'],
+    //   maxlength: [20, 'Password can not be more thatn 20 charachters.'],
+    // },
+    name: {
+      required: true,
+      type: userNameSchema,
+    },
+    gender: {
+      type: String,
+      required: true,
+      enum: {
+        values: ['male', 'female'],
+        message:
+          "{VALUE} isn't supported. The gender should be either male or female",
+      },
+    },
+    dateOfBirth: { type: Date },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      validate: {
+        validator: (value: string) => validator.isEmail(value),
+      },
+    },
+    contactNo: { type: String, required: true },
+    emergencyContactNo: { type: String, required: true },
+    bloodGroup: {
+      type: String,
+      enum: {
+        values: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
+        message: '{VALUE} is not a valid blood group',
+      },
+    },
+    presentAddress: { type: String, required: true },
+    permanentAddress: { type: String, required: true },
+    guardian: {
+      required: true,
+      type: guardianSchema,
+    },
+    localGuardian: {
+      required: true,
+      type: localGuardianSchema,
+    },
+    profileImg: { type: String },
+    admissionSemester: {
+      type: Schema.Types.ObjectId,
+      ref: 'AcademicSemester',
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
     },
   },
-  dateOfBirth: { type: Date },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-    validate: {
-      validator: (value: string) => validator.isEmail(value),
+  {
+    toJSON: {
+      virtuals: true,
     },
   },
-  contactNo: { type: String, required: true },
-  emergencyContactNo: { type: String, required: true },
-  bloodGroup: {
-    type: String,
-    enum: {
-      values: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
-      message: '{VALUE} is not a valid blood group',
-    },
-  },
-  presentAddress: { type: String, required: true },
-  permanentAddress: { type: String, required: true },
-  guardian: {
-    required: true,
-    type: guardianSchema,
-  },
-  localGuardian: {
-    required: true,
-    type: localGuardianSchema,
-  },
-
-  profileImg: { type: String },
-});
+);
 
 studentSchema.virtual('fullName').get(function () {
   return this.name.firstName + this.name.lastName;
