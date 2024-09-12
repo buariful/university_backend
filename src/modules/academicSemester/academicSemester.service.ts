@@ -56,7 +56,7 @@ const updateAcademicSemester = async (
   const result = await AcademicSemester.findByIdAndUpdate(semesterId, payload, {
     new: false,
   });
-  return { result, hasYearNameInPaylod };
+  return result;
 };
 
 export const AcademicSemesterService = {
