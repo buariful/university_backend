@@ -1,4 +1,7 @@
+import httpStatus from 'http-status';
 import config from '../../app/config';
+import AppError from '../../app/Errors/AppError';
+import { AcademicDepartment } from '../academicDepartment/academicDepartment.model';
 
 import { AcademicSemester } from '../academicSemester/academicSemester.model';
 import { TStudent } from '../student/student.interface';
@@ -26,7 +29,18 @@ const createStuentIntoDB = async (password: string, payload: TStudent) => {
     payload.admissionSemester,
   );
   if (!admissionSemester) {
-    throw new Error('Admission semester not found');
+    // throw new Error('Admission semester not found');
+    throw new AppError(httpStatus.NOT_FOUND, 'Admission semester is not found');
+  }
+
+  const academicDepartment = await AcademicDepartment.findById(
+    payload.academicDepartment,
+  );
+  if (!academicDepartment) {
+    throw new AppError(
+      httpStatus.NOT_FOUND,
+      'Academic department is not found',
+    );
   }
 
   //  set manually generated id
