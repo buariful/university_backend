@@ -9,6 +9,7 @@ import { Student } from '../student/stuedent.model';
 import { TUser } from './user.interface';
 import { User } from './user.model';
 import { generateStudentId } from './user.utils';
+import mongoose from 'mongoose';
 
 const createStuentIntoDB = async (password: string, payload: TStudent) => {
   // checking if student exists with same email
@@ -43,22 +44,46 @@ const createStuentIntoDB = async (password: string, payload: TStudent) => {
     );
   }
 
-  //  set manually generated id
-  userData.id = await generateStudentId(admissionSemester);
+  /* 
+  ==================================
+    TRANSACTION AND ROLLBACK
+  ==================================
+  */
+  const session = await mongoose.startSession();
 
-  //  create a user
-  const newUser = await User.create(userData);
+  try {
+    // starting the transaction
+    session.startTransaction();
 
-  // create a stuent
-  if (Object.keys(newUser).length) {
+    //  set generated id
+    userData.id = await generateStudentId(admissionSemester);
+
+    //  create a user (transaction-1)
+    const newUser = await User.create([userData], { session });
+
+    // create a stuent
+    if (!newUser.length) {
+      throw new AppError(httpStatus.BAD_REQUEST, 'Failed to create user');
+    }
     //  set id, _id as user
-    payload.id = newUser.id;
-    payload.user = newUser._id; //reference _id
+    payload.id = newUser[0].id;
+    payload.user = newUser[0]._id; //reference _id
 
-    const newStudent = await Student.create(payload);
+    // creating a student (transaction-2)
+    const newStudent = await Student.create([payload], { session });
+    if (!newStudent.length) {
+      throw new AppError(httpStatus.BAD_REQUEST, 'Failed to create student');
+    }
+
+    // committing and ending  the transaction
+    await session.commitTransaction();
+    await session.endSession();
+
     return newStudent;
-  } else {
-    throw new Error('Failed to create student.');
+  } catch (error) {
+    // aborting and ending the transaction.
+    await session.abortTransaction();
+    await session.endSession();
   }
 };
 
