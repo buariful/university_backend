@@ -32,7 +32,28 @@ const getSingleStudent: RequestHandler = async (req, res) => {
   }
 };
 
+const deleteStudent: RequestHandler = async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    const result = await StudentServices.deleteStudentFromDB(studentId);
+
+    res.status(200).json({
+      success: true,
+      message: 'Student deleted successfully',
+      data: result,
+    });
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.log(error);
+    res.status(400).json({
+      success: false,
+      message: 'Something went wrong.',
+    });
+  }
+};
+
 export const StudentControllers = {
   getStudents,
   getSingleStudent,
+  deleteStudent,
 };
