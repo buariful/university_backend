@@ -4,6 +4,7 @@ import { Student } from './stuedent.model';
 import AppError from '../../app/Errors/AppError';
 import httpStatus from 'http-status';
 import { User } from '../user/user.model';
+import { TStudent } from './student.interface';
 
 // const createStudentIntoDB = async (studentData: TStudent) => {
 //   // const result = await Student.create(student);
@@ -72,7 +73,13 @@ const deleteStudentFromDB = async (id: string) => {
   } catch (error) {
     await session.abortTransaction();
     await session.endSession();
+    throw new Error('Failed to delete student');
   }
+};
+
+const updateStudentIntoDB = async (id: string, payload: Partial<TStudent>) => {
+  const result = await Student.findOneAndUpdate({ id }, payload);
+  return result;
 };
 
 export const StudentServices = {
@@ -80,4 +87,5 @@ export const StudentServices = {
   getAllStudents,
   getSingleStudent,
   deleteStudentFromDB,
+  updateStudentIntoDB,
 };
