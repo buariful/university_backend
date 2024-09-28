@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
-import { globalMiddleware } from './middlewares/globalMiddleware';
+import { globalErrorMiddleware } from './middlewares/globalErrorMiddleware';
 import { notFound } from './middlewares/notFound';
 import router from './app/routes';
 const app: Application = express();
@@ -18,7 +18,7 @@ app.get('/', (req: Request, res: Response) => {
   res.send(a);
 });
 
-app.use(globalMiddleware);
+app.use(globalErrorMiddleware);
 app.use(notFound);
 
 export default app;
