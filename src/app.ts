@@ -13,9 +13,10 @@ app.use(cors());
 // application routes
 app.use('/api/v1', router);
 
-app.get('/', (req: Request, res: Response) => {
-  const a = 10;
-  res.send(a);
+app.get('/test', (req: Request, res: Response) => {
+  // const a = 10;
+  // res.send(a);
+  Promise.reject();
 });
 
 app.use(globalErrorMiddleware);

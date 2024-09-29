@@ -8,6 +8,7 @@ import handleZodError from '../app/Errors/handleZodError';
 import handleValidationError from '../app/Errors/handleValidationError';
 import handleCastError from '../app/Errors/handleCastError';
 import handleDuplicateError from '../app/Errors/handleDuplicateError';
+import AppError from '../app/Errors/AppError';
 
 export const globalErrorMiddleware: ErrorRequestHandler = (
   err,
@@ -15,8 +16,8 @@ export const globalErrorMiddleware: ErrorRequestHandler = (
   res,
   next,
 ) => {
-  let statusCode = err.statusCode || 500;
-  let message = err.message || 'Something went wrong';
+  let statusCode = 500;
+  let message = 'Something went wrong';
 
   let errorSources: TErrorSources = [
     {
@@ -45,6 +46,15 @@ export const globalErrorMiddleware: ErrorRequestHandler = (
     statusCode = simplifiedError?.statusCode;
     message = simplifiedError?.message;
     errorSources = simplifiedError?.errorSources;
+  } else if (err instanceof AppError) {
+    message = err?.message;
+    statusCode = err?.statusCode;
+    errorSources = [
+      {
+        message: err?.message,
+        path: '',
+      },
+    ];
   }
 
   return res.status(statusCode).json({
