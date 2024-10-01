@@ -16,8 +16,26 @@ import { TStudent } from './student.interface';
 //   return result;
 // };
 
-const getAllStudents = async () => {
-  const result = await Student.find({})
+const getAllStudents = async (query: Record<string, unknown>) => {
+  const queryObj = { ...query };
+
+  let searchTerm = '';
+  if (query?.searchTerm) {
+    searchTerm = query?.searchTerm as string;
+  }
+
+  const studentSearchableFields = ['email', 'name.firstName', 'presentAddress'];
+  const searchQuery = Student.find({
+    $or: studentSearchableFields?.map((field) => ({
+      [field]: { $regex: searchTerm, $options: 'i' }, // partial match er jonno regex
+    })),
+  });
+
+  const excludeFields = ['searchTerm', 'sort', 'limit', 'page', 'fields'];
+  excludeFields.forEach((el) => delete queryObj[el]);
+
+  const findQuery = searchQuery
+    .find(queryObj)
     .populate('admissionSemester')
     .populate({
       path: 'academicDepartment',
@@ -25,8 +43,37 @@ const getAllStudents = async () => {
         path: 'academicFaculty',
       },
     });
-  return result;
+
+  let sort = '-createdAt';
+  if (query.sort) {
+    sort = query.sort as string;
+  }
+  const sortResult = findQuery.sort(sort);
+
+  let limit = 1;
+  let page = 1;
+  let skip = 0;
+  if (query.limit) {
+    limit = Number(query.limit);
+  }
+  if (query.page) {
+    page = Number(query.page);
+    skip = (page - 1) * limit;
+  }
+
+  const skipQuery = sortResult.skip(skip);
+  const limitQuery = skipQuery.limit(limit);
+
+  let fields = '-__v';
+  if (query.fields) {
+    fields = (query.fields as string).split(',').join(' ');
+  }
+
+  const fieldQuery = await limitQuery.select(fields);
+
+  return fieldQuery;
 };
+
 const getSingleStudent = async (id: string) => {
   const result = await Student.findOne({ id })
     .populate('admissionSemester')

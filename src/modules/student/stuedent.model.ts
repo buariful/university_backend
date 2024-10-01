@@ -115,11 +115,18 @@ const studentSchema = new Schema<TStudent, StudentModel, StudentMethods>(
     toJSON: {
       virtuals: true,
     },
+    timestamps: true,
   },
 );
 
 studentSchema.virtual('fullName').get(function () {
-  return this.name.firstName + this.name.lastName;
+  return (
+    this?.name?.firstName +
+    ' ' +
+    this?.name?.middleName +
+    ' ' +
+    this?.name?.lastName
+  );
 });
 
 // query middlewares
