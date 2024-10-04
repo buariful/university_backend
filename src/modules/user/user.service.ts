@@ -8,8 +8,11 @@ import { TStudent } from '../student/student.interface';
 import { Student } from '../student/stuedent.model';
 import { TUser } from './user.interface';
 import { User } from './user.model';
-import { generateStudentId } from './user.utils';
+import { generateFacultyId, generateStudentId } from './user.utils';
 import mongoose from 'mongoose';
+import { TFaculty } from '../faculty/faculty.interface';
+import { AcademicFaculty } from '../academicFaculty/academicFaculty.model';
+import { Faculty } from '../faculty/faculty.model';
 
 const createStuentIntoDB = async (password: string, payload: TStudent) => {
   // checking if student exists with same email
@@ -88,6 +91,59 @@ const createStuentIntoDB = async (password: string, payload: TStudent) => {
   }
 };
 
+const insertFacultyIntoDB = async (password: string, payload: TFaculty) => {
+  const academicFaculty = await AcademicFaculty.findById(
+    payload?.academicFaculty,
+  );
+  if (!academicFaculty) {
+    throw new AppError(400, 'Academic faculty not found');
+  }
+
+  // create a user object
+  const userData: Partial<TUser> = {};
+  userData.password = password || (config.default_password as string);
+  userData.role = 'faculty';
+
+  const session = await mongoose.startSession();
+  try {
+    session.startTransaction();
+
+    //  set generated id
+    userData.id = await generateFacultyId();
+
+    //  create an user
+    const newUser = await User.create([userData], { session });
+    if (!newUser.length) {
+      throw new AppError(httpStatus.BAD_REQUEST, 'Failed to create user');
+    }
+
+    const newFaculty = await Faculty.create(
+      [
+        {
+          ...payload,
+          id: newUser[0].id,
+          user: newUser[0]._id,
+        },
+      ],
+      { session },
+    );
+    if (!newFaculty.length) {
+      throw new AppError(httpStatus.BAD_REQUEST, 'Failed to create faculty');
+    }
+
+    await session.commitTransaction();
+    await session.endSession();
+
+    return newFaculty;
+  } catch (error) {
+    await session.abortTransaction();
+    await session.endSession();
+
+    throw new Error('Failed to create faculty');
+  }
+};
+
 export const UserServices = {
   createStuentIntoDB,
+  insertFacultyIntoDB,
 };
