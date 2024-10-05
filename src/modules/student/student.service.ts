@@ -108,7 +108,7 @@ const getSingleStudent = async (id: string) => {
 };
 
 const deleteStudentFromDB = async (id: string) => {
-  const student = await Student.find({ isDeleted: { $ne: true }, id });
+  const student = await Student.find({ _id: id });
   if (!student.length) {
     throw new AppError(httpStatus.BAD_REQUEST, "Student doesn't exists");
   }
@@ -116,8 +116,9 @@ const deleteStudentFromDB = async (id: string) => {
   const session = await mongoose.startSession();
   try {
     session.startTransaction();
-    const deletedStudent = await Student.findOneAndUpdate(
-      { id },
+    // const deletedStudent = await Student.findOneAndUpdate(
+    const deletedStudent = await Student.findByIdAndUpdate(
+      id,
       { isDeleted: true },
       { new: true, session },
     );
@@ -126,7 +127,7 @@ const deleteStudentFromDB = async (id: string) => {
     }
 
     const deletedUser = await User.findOneAndUpdate(
-      { id },
+      { id: student[0].id },
       { isDeleted: true },
       { new: true, session },
     );
@@ -146,7 +147,8 @@ const deleteStudentFromDB = async (id: string) => {
 };
 
 const updateStudentIntoDB = async (id: string, payload: Partial<TStudent>) => {
-  const result = await Student.findOneAndUpdate({ id }, payload);
+  // const result = await Student.findOneAndUpdate({ id }, payload);
+  const result = await Student.findByIdAndUpdate(id, payload);
   return result;
 };
 
