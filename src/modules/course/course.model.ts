@@ -5,6 +5,7 @@ const preRequisiteCoursesSchema = new Schema<TPreRequisiteCourse>({
   course: {
     type: Schema.Types.ObjectId,
     required: true,
+    ref: 'course',
   },
   isDeleted: {
     type: Boolean,
