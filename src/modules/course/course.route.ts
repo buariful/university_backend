@@ -13,8 +13,14 @@ router.post(
 
 router.get('/get-all', CoursesControllers.getAllCourses);
 
-router.get('/:courseId', CoursesControllers.getSingleCourse);
+router.get('/get-one/:courseId', CoursesControllers.getSingleCourse);
 
-router.delete('/:courseId', CoursesControllers.deleteCourse);
+router.delete('/delete/:courseId', CoursesControllers.deleteCourse);
+
+router.patch(
+  '/update/:courseId',
+  validateRequest(CourseValidation.updatedCourseValidationSchema),
+  CoursesControllers.updateCourseInfo,
+);
 
 export const CourseRouter = router;
