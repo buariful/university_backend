@@ -13,32 +13,37 @@ const preRequisiteCoursesSchema = new Schema<TPreRequisiteCourse>({
   },
 });
 
-const courseSchema = new Schema<TCourse>({
-  title: {
-    type: String,
-    required: true,
-    unique: true,
-    trim: true,
+const courseSchema = new Schema<TCourse>(
+  {
+    title: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+    },
+    prefix: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    code: {
+      type: Number,
+      required: true,
+    },
+    credits: {
+      type: Number,
+      required: true,
+    },
+    preRequisiteCourses: [preRequisiteCoursesSchema],
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
   },
-  prefix: {
-    type: String,
-    required: true,
-    trim: true,
+  {
+    timestamps: true,
   },
-  code: {
-    type: Number,
-    required: true,
-  },
-  credits: {
-    type: Number,
-    required: true,
-  },
-  preRequisiteCourses: [preRequisiteCoursesSchema],
-  isDeleted: {
-    type: Boolean,
-    default: false,
-  },
-});
+);
 
 courseSchema.pre('find', function (next) {
   this.find({ isDeleted: { $ne: true } });
