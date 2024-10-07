@@ -1,7 +1,10 @@
+import mongoose from 'mongoose';
 import QueryBuilder from '../../app/builder/QueryBuilder';
 import { courseSearchalbeFields } from './course.constants';
 import { TCourse } from './course.interface';
 import Course from './course.model';
+import AppError from '../../app/Errors/AppError';
+import httpStatus from 'http-status';
 
 const createCourseIntoDB = async (payload: TCourse) => {
   const result = await Course.create(payload);
@@ -43,53 +46,81 @@ const deleteCourseFromDB = async (id: string) => {
 const updateCourseInfoInDB = async (id: string, payload: Partial<TCourse>) => {
   const { preRequisiteCourses, ...payloadRemaining } = payload;
 
-  await Course.findByIdAndUpdate(id, payloadRemaining, {
-    new: true,
-  });
+  const session = await mongoose.startSession();
 
-  if (preRequisiteCourses && preRequisiteCourses.length) {
-    // const deletedPreRequisiteIds = preRequisiteCourses
-    //   .filter((el) => el.course && el.isDeleted)
-    //   .map((el) => el.course);
-    const deletedPreRequisiteIds = preRequisiteCourses.map((el) => el.course);
+  try {
+    session.startTransaction();
 
-    const newPreRequesiteIds = preRequisiteCourses
-      .filter((el) => el.course && !el.isDeleted)
-      .map((el) => el.course);
-
-    /*
-     * Note: $addToSet ensures uniqueness only at the top level of the array.
-     * Since { course: id } objects are treated as unique as a whole, MongoDB
-     * doesn't prevent adding multiple objects with the same course ID.
-     *
-     * To enforce uniqueness on the 'course' field within preRequisiteCourses,
-     * consider:
-     * 1. Using $pull to remove duplicates by course before adding new entries
-     */
-
-    // delete preRequisite
-    await Course.findByIdAndUpdate(id, {
-      $pull: {
-        preRequisiteCourses: { course: { $in: deletedPreRequisiteIds } },
+    const updatedBasicCourseInfo = await Course.findByIdAndUpdate(
+      id,
+      payloadRemaining,
+      {
+        new: true,
+        runValidators: true,
+        session,
       },
-    });
+    );
 
-    // add new preRequisite
-    await Course.findByIdAndUpdate(id, {
-      $addToSet: {
-        preRequisiteCourses: {
-          $each: newPreRequesiteIds.map((requesiteId) => ({
-            course: requesiteId,
-          })),
+    if (!updatedBasicCourseInfo) {
+      throw new AppError(httpStatus.BAD_REQUEST, 'Failed to updated course');
+    }
+
+    if (preRequisiteCourses && preRequisiteCourses.length) {
+      const deletedPreRequisiteIds = preRequisiteCourses
+        .filter((el) => el.course && el.isDeleted)
+        .map((el) => el.course);
+
+      const newPreRequesiteIds = preRequisiteCourses
+        .filter((el) => el.course && !el.isDeleted)
+        .map((el) => el.course);
+
+      // delete preRequisite
+      await Course.findByIdAndUpdate(
+        id,
+        {
+          $pull: {
+            preRequisiteCourses: { course: { $in: deletedPreRequisiteIds } },
+          },
         },
-      },
-    });
-  }
+        {
+          session,
+          new: true,
+          runValidators: true,
+        },
+      );
 
-  const result = await Course.findById(id).populate(
-    'preRequisiteCourses.course',
-  );
-  return result;
+      // add new preRequisite
+      await Course.findByIdAndUpdate(
+        id,
+        {
+          $addToSet: {
+            preRequisiteCourses: {
+              $each: newPreRequesiteIds.map((requesiteId) => ({
+                course: requesiteId,
+              })),
+            },
+          },
+        },
+        {
+          new: true,
+          runValidators: true,
+          session,
+        },
+      );
+    }
+
+    await session.commitTransaction();
+    await session.endSession();
+
+    const result = await Course.findById(id).populate(
+      'preRequisiteCourses.course',
+    );
+    return result;
+  } catch (error) {
+    await session.abortTransaction();
+    await session.endSession();
+    throw new AppError(httpStatus.BAD_REQUEST, 'Failed to updated course');
+  }
 };
 
 export const CourseServices = {
