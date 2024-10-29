@@ -12,7 +12,16 @@ router.post(
   SemesterRegistrationController.createSemesterRegistration,
 );
 
+router.patch(
+  '/:id',
+  validateRequest(
+    SemesterRegistrationValidations.updateSemesterRegistrationValidationSchema,
+  ),
+  SemesterRegistrationController.createSemesterRegistration,
+);
+
 router.get('/', SemesterRegistrationController.getAllSemesterRegistrations);
+
 router.get(
   '/:id',
   SemesterRegistrationController.getSingleSemesterRegistrations,
