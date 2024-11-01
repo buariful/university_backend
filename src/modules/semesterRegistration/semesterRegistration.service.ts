@@ -80,21 +80,34 @@ const updateSemesterRegistrationInDB = async (
   }
   // if the  requested semester registration is ended, then we will not updated anything.
   const requestedStatus = payload?.status;
-  const currentStatus = requestedSemester.status; 
-  
+  const currentStatus = requestedSemester.status;
+
+  // validate the current and requested status
   if (currentStatus === 'ENDED') {
     throw new AppError(
       httpStatus.BAD_REQUEST,
       `This semester is already ended`,
     );
   }
-
-  if(currentStatus == "UPCOMING" && requestedStatus === "ENDED"){
+  if (currentStatus == 'UPCOMING' && requestedStatus === 'ENDED') {
     throw new AppError(
       httpStatus.BAD_REQUEST,
       `You can not directly change status from ${currentStatus} to ${requestedStatus}`,
-    )
+    );
   }
+  if (currentStatus == 'ONGOING' && requestedStatus === 'UPCOMING') {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      `You can not directly change status from ${currentStatus} to ${requestedStatus}`,
+    );
+  }
+
+  const result = await SemesterRegistration.findByIdAndUpdate(id, payload, {
+    new: true,
+    runValidators: true,
+  });
+
+  return result;
 };
 
 export const SemsterRegistrationService = {
